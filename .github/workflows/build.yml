@@ -1,32 +1,22 @@
-name: Build GCodePreviewHandler
+name: Build Preview Handler
 
 on:
   push:
     branches: [ main ]
+  pull_request:
 
 jobs:
   build:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - uses: actions/checkout@v3
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1.3.1
 
-      - name: Restore NuGet packages
-        run: dotnet restore src/GCodePreviewHandler.sln
+    - name: Restore NuGet packages
+      run: nuget restore src/GCodePreviewHandler.sln
 
-      - name: Build solution
-        run: dotnet build src/GCodePreviewHandler.sln --configuration Release
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: GCodePreviewHandler-build
-          path: |
-            src/GCodePreviewHandler/bin/Release/
-            src/GCodePreviewControl/bin/Release/
+    - name: Build solution
+      run: msbuild src/GCodePreviewHandler.sln /p:Configuration=Release

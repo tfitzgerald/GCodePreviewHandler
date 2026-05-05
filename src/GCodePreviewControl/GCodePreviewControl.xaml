@@ -1,11 +1,11 @@
-<es?<![CDATA Xmlns:xs="http://www.w3.org/2001/XMLSchema" version="1.0" encoding="utf-8"?>
 <UserControl x:Class="GCodePreviewControl.GCodePreviewControl"
-                 xmlns="http://schemas.microsoft.com/winfx/2006/presentation"
-                 xmlns:bx="http://schemas.microsoft.com/winfx/2006/x50/presentation"
-                xmlns:h="http://helixToolkit.codeplex.com">
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:hx="clr-namespace:HelixToolkit.Wpf.SharpDX;assembly=HelixToolkit.Wpf.SharpDX">
     <Grid>
-        <h:HelixViewport3D x:Name="Viewport" ZoomExtentsWhenLoaded="True">
-            <h:DefaultLights/>
-        </h:HelixViewport3D>
+        <hx:Viewport3DX x:Name="Viewport"
+                        EnableOIT="True"
+                        ShowCoordinateSystem="True"
+                        ZoomExtentsWhenLoaded="True" />
     </Grid>
 </UserControl>

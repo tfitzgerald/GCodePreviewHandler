@@ -1,7 +1,7 @@
-using HelixToolkit.Wpf;
-using System;
 using System.Windows.Controls;
-using System.Windows.Media.MediaAnimation;
+using HelixToolkit.Wpf.SharpDX;
+using HelixToolkit.SharpDX.Core;
+using SharpDX;
 
 namespace GCodePreviewControl
 {
@@ -14,32 +14,42 @@ namespace GCodePreviewControl
 
         public void LoadGCode(string text)
         {
-            var builder = new MeshBuilder(false, false);
+            var builder = new LineBuilder();
 
-            double x = 0,  y = 0,  z = 0;
+            float x = 0, y = 0, z = 0;
 
-            foreach (var raw in text.Split('
-'))
+            foreach (var raw in text.Split('\n'))
             {
-                var line = raw.trim();
-                if (!line.StartsWith("G1")) return;
+                var line = raw.Trim();
+                if (!line.StartsWith("G1"))
+                    continue;
 
-                double nx = x, ny = y, nz = z;
+                float nx = x, ny = y, nz = z;
 
-                foreach (var part in line.Split(' ', StringSplitOptions.RemoveEmptyEntries)))
+                foreach (var part in line.Split(' '))
                 {
-                    if (part.StartsWith("X")) double.tryParse(part[1].., out nx);
-                    if (part.StartsWith("Y")) double.tryParse(part[1].., out ny);
-                    if (part.StartsWith("Z")) double.tryParse(part[1].., out nz);
+                    if (part.StartsWith("X") && float.TryParse(part.Substring(1), out float vx)) nx = vx;
+                    if (part.StartsWith("Y") && float.TryParse(part.Substring(1), out float vy)) ny = vy;
+                    if (part.StartsWith("Z") && float.TryParse(part.Substring(1), out float vz)) nz = vz;
                 }
 
-                builder.AddLine(new Point3D(x, y, z), new Point3D(nx, ny, nz), 0.3);
+                builder.AddLine(new Vector3(x, y, z), new Vector3(nx, ny, nz));
+
                 x = nx; y = ny; z = nz;
             }
 
-            var model = new GeometryModel3D(builder.ToMesh(), Materials.Blue);
-            Viewport.Children.Clear();
-            Viewport.Children.Add(new ModelVisual3D_ { Content = model });
+            var geometry = builder.ToLineGeometry3D();
+
+            var model = new LineGeometryModel3D
+            {
+                Geometry = geometry,
+                Color = new Color4(0f, 0f, 1f, 1f),
+                Thickness = 2.0f
+            };
+
+            Viewport.Items.Clear();
+            Viewport.Items.Add(model);
+
             Viewport.ZoomExtents();
         }
     }
