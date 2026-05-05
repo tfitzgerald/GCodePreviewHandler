@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+
+  <Product
+      Id="*"
+      Name="GCode Preview Handler"
+      Language="1033"
+      Version="1.0.0.0"
+      Manufacturer="Thane"
+      UpgradeCode="F5F8C7F3-0C9E-4C0E-9E7E-8F4F0E0A1234">
+
+    <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" Platform="x64" />
+    <MediaTemplate />
+    <MajorUpgrade DowngradeErrorMessage="A newer version is already installed." />
+
+    <Property Id="PREVIEW_GUID" Value="{8895b1c6-b41f-4c1c-a562-0d564250836f}" />
+    <Property Id="HANDLER_CLSID" Value="{A1C3F4D2-9B8E-4F1E-8C3C-2A1F0B9D1234}" />
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLDIR" Name="GCodePreviewHandler">
+          <Component Id="cmpHandlerFiles" Guid="C4C8C2E4-6C4F-4F0B-9E1C-1B2E3C4D5E6F">
+            <File Id="filHandlerDll" Source="$(var.HandlerBin)\GCodePreviewHandler.dll" KeyPath="yes" />
+            <File Id="filInstallPs1" Source="../install.ps1" />
+            <File Id="filUninstallPs1" Source="../uninstall.ps1" />
+          </Component>
+        </Directory>
+      </Directory>
+
+      <Directory Id="HKCR" Name="HKCR">
+        <Directory Id="HKCR_Ext_nc" Name=".nc">
+          <Directory Id="HKCR_Ext_nc_ShellEx" Name="ShellEx">
+            <Component Id="cmpNcPreviewReg" Guid="B1B2B3B4-B5B6-4B7B-8B9B-0B1B2B3B4B5B">
+              <RegistryValue
+                Root="HKCR"
+                Key=".nc\ShellEx\[PREVIEW_GUID]"
+                Name=""
+                Type="string"
+                Value="[HANDLER_CLSID]"
+                KeyPath="yes" />
+            </Component>
+          </Directory>
+        </Directory>
+      </Directory>
+
+      <Directory Id="HKCR_Ext_gcode" Name=".gcode">
+        <Directory Id="HKCR_Ext_gcode_ShellEx" Name="ShellEx">
+          <Component Id="cmpGcodePreviewReg" Guid="A1A2A3A4-A5A6-4A7A-8A9A-0A1A2A3A4A5A">
+            <RegistryValue
+                Root="HKCR"
+                Key=".gcode\ShellEx\[PREVIEW_GUID]"
+                Name=""
+                Type="string"
+                Value="[HANDLER_CLSID]"
+                KeyPath="yes" />
+          </Component>
+          </Directory>
+        </Directory>
+      </Directory>
+
+    </Directory>
+
+  </Product>
+</Wix>
