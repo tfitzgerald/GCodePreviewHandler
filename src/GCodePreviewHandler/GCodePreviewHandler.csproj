@@ -2,15 +2,22 @@
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" />
 
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{B2B2B2B2-B2B2-B2B2-B2B2-B2B2B2B2B2B2}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <RootNamespace>GCodePreviewHandler</RootNamespace>
-    <AssemblyName>GCodePreviewHandler</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <RegisterForComInterop>true</RegisterForComInterop>
+	  <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+	  <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+	  <ProjectGuid>{B2B2B2B2-B2B2-B2B2-B2B2-B2B2B2B2B2B2}</ProjectGuid>
+	  <OutputType>Library</OutputType>
+	  <RootNamespace>GCodePreviewHandler</RootNamespace>
+	  <AssemblyName>GCodePreviewHandler</AssemblyName>
+	  <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+	  <RegisterForComInterop>true</RegisterForComInterop>
+
+	  <!-- REQUIRED FOR GITHUB ACTIONS -->
+	  <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
+	  <BaseOutputPath>bin\</BaseOutputPath>
+	  <OutputPath>bin\$(Configuration)\</OutputPath>
+	  <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
   </PropertyGroup>
+
 
   <ItemGroup>
     <ProjectReference Include="..\GCodePreviewControl\GCodePreviewControl.csproj" />
