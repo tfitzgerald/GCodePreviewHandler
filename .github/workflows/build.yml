@@ -4,17 +4,29 @@ on:
   push:
     branches: [ main ]
 
-
- jobs:
+jobs:
   build:
-    runs: windows
+    runs-on: windows-latest
+
     steps:
-      - name: Checkout
-        run: git checkout
-      - name: Setup Net
-        run: steps
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
-            name: setup-dotnet-core
-            using: actions/setup-dotnet-core@v2
-      - name: Build
-        run: msbuild /p "src\GCodePreviewHandler.sln" /p: x64 /m: Release
+          dotnet-version: '8.0.x'
+
+      - name: Restore NuGet packages
+        run: dotnet restore src/GCodePreviewHandler.sln
+
+      - name: Build solution
+        run: dotnet build src/GCodePreviewHandler.sln --configuration Release
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: GCodePreviewHandler-build
+          path: |
+            src/GCodePreviewHandler/bin/Release/
+            src/GCodePreviewControl/bin/Release/
