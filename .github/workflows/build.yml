@@ -17,7 +17,7 @@ jobs:
       uses: microsoft/setup-msbuild@v2
 
     - name: Restore packages
-        run: msbuild "GCodePreviewHandler.sln" /t:Restore
+      run: msbuild "GCodePreviewHandler.sln" /t:Restore
 
     - name: Build solution
       run: msbuild "GCodePreviewHandler.sln" /p:Configuration=Release
