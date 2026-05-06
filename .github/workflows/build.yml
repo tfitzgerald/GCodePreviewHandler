@@ -21,6 +21,14 @@ jobs:
 
     - name: Build solution
       run: msbuild src/GCodePreviewHandler.sln /p:Configuration=Release
+      
+    - name: List build output
+      run: |
+        echo "=== GCodePreviewHandler output ==="
+        dir /s src\GCodePreviewHandler\bin
+        echo "=== GCodePreviewControl output ==="
+        dir /s src\GCodePreviewControl\bin
+      
 
     - name: Create packaging folder
       run: |

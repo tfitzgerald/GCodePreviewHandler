@@ -1,6 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
 
+<!-- At the top of Product.wxs, set the staging dir variable -->
+<?define StagingDir="..\..\Installer\Staging" ?>
+
+<!-- Then each File element uses it -->
+<File Source="$(var.StagingDir)\GCodePreviewHandler.dll" />
+<File Source="$(var.StagingDir)\GCodePreviewControl.dll" />
+
+<!-- Dependencies — paste the list from the PowerShell output and I'll fill these in -->
+<File Source="$(var.StagingDir)\HelixToolkit.Wpf.SharpDX.dll" />
+<File Source="$(var.StagingDir)\HelixToolkit.SharpDX.Core.dll" />
+<File Source="$(var.StagingDir)\SharpDX.dll" />
+<File Source="$(var.StagingDir)\SharpDX.Direct3D11.dll" />
+<File Source="$(var.StagingDir)\SharpDX.DXGI.dll" />
+<File Source="$(var.StagingDir)\SharpDX.Mathematics.dll" />
+
+
   <Product
       Id="*"
       Name="GCode Preview Handler"
