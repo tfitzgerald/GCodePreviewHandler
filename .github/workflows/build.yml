@@ -27,21 +27,35 @@ jobs:
       run: msbuild src/GCodePreviewHandler.sln /p:Configuration=Release
 
     - name: Install WiX Toolset 3
-      run: choco install wixtoolset -y --no-progress
+      run: choco install wixtoolset -y --force --no-progress
 
     - name: Build MSI installer
       shell: pwsh
       run: |
+        $wixBin = (Get-Item "C:\Program Files (x86)\WiX Toolset v3*\bin" |
+                   Sort-Object Name -Descending |
+                   Select-Object -First 1).FullName
+        Write-Host "WiX bin: $wixBin"
+        Get-ChildItem $wixBin -Filter "*.exe" | Select-Object -ExpandProperty Name
+
         $handlerBin = "${{ github.workspace }}\src\GCodePreviewHandler\bin\Release"
         $controlBin = "${{ github.workspace }}\src\GCodePreviewControl\bin\Release"
-        $wixToolPath = (Get-Item "C:\Program Files (x86)\WiX Toolset v3*\bin" |
-                        Sort-Object Name -Descending |
-                        Select-Object -First 1).FullName
-        Write-Host "WiX bin path: $wixToolPath"
-        msbuild Installer/Wix/GCodePreviewHandler.wixproj `
-          /p:Configuration=Release `
-          /p:WixToolPath="$wixToolPath" `
-          /p:DefineConstants="HandlerBin=$handlerBin;ControlBin=$controlBin"
+
+        # Compile .wxs -> .wixobj
+        & "$wixBin\candle.exe" -arch x64 `
+            -dHandlerBin="$handlerBin" `
+            -dControlBin="$controlBin" `
+            Installer/Wix/Product.wxs `
+            -out Installer/Wix/Product.wixobj
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+        # Link .wixobj -> .msi
+        New-Item -ItemType Directory -Path staging -Force | Out-Null
+        & "$wixBin\light.exe" `
+            Installer/Wix/Product.wixobj `
+            -out staging/GCodePreviewHandler.msi
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
 
     - name: Package ZIP
       shell: pwsh
