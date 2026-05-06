@@ -33,10 +33,11 @@ jobs:
     - name: Create packaging folder
       run: |
         mkdir package
-        copy src\GCodePreviewHandler\bin\Release\GCodePreviewHandler.dll package\
-        copy src\GCodePreviewControl\bin\Release\GCodePreviewControl.dll package\
-        copy Installer\RegisterPreviewHandler.reg package\
-        copy Installer\Install.bat package\
+        copy "src\GCodePreviewHandler\bin\Release\GCodePreviewHandler.dll" "package\"
+        copy "src\GCodePreviewControl\bin\Release\GCodePreviewControl.dll" "package\"
+        copy "Installer\RegisterPreviewHandler.reg" "package\"
+        copy "Installer\Install.bat" "package\"
+
 
     - name: Zip package
       run: powershell Compress-Archive -Path package\* -DestinationPath GCodePreviewHandler.zip -Force
