@@ -17,27 +17,41 @@ jobs:
       uses: microsoft/setup-msbuild@v2
 
     - name: Restore NuGet packages
-      run: nuget restore src/GCodePreviewHandler.sln
+      run: nuget restore "src/GCodePreviewHandler.sln"
 
-    - name: Build solution
-      run: msbuild src/GCodePreviewHandler.sln /p:Configuration=Release
-      
+    - name: Build solution (with error log)
+      run: msbuild "src/GCodePreviewHandler.sln" /p:Configuration=Release /fl /flp:logfile=msbuild.err;errorsonly
+
+    - name: Show MSBuild errors
+      run: |
+        echo "=== MSBuild Errors ==="
+        if (Test-Path msbuild.err) { type msbuild.err } else { echo "No msbuild.err file found" }
+
     - name: List build output
       run: |
-        echo "=== GCodePreviewHandler output ==="
-        dir "src/GCodePreviewHandler/bin" -Recurse
-        echo "=== GCodePreviewControl output ==="
-        dir "src/GCodePreviewControl/bin" -Recurse
-      
+        echo "=== Handler ==="
+        dir "src\GCodePreviewHandler" -Recurse
+        echo "=== Control ==="
+        dir "src\GCodePreviewControl" -Recurse
 
     - name: Create packaging folder
       run: |
         mkdir package
-        copy "src\GCodePreviewHandler\bin\Release\GCodePreviewHandler.dll" "package\"
-        copy "src\GCodePreviewControl\bin\Release\GCodePreviewControl.dll" "package\"
+
+        REM Copy REAL DLLs from ANYCPU or x64 Release folders
+        copy "src\GCodePreviewHandler\bin\Release\GCodePreviewHandler.dll" "package\" 2>nul
+        copy "src\GCodePreviewHandler\bin\x64\Release\GCodePreviewHandler.dll" "package\" 2>nul
+        copy "src\GCodePreviewHandler\bin\AnyCPU\Release\GCodePreviewHandler.dll" "package\" 2>nul
+
+        copy "src\GCodePreviewControl\bin\Release\GCodePreviewControl.dll" "package\" 2>nul
+        copy "src\GCodePreviewControl\bin\x64\Release\GCodePreviewControl.dll" "package\" 2>nul
+        copy "src\GCodePreviewControl\bin\AnyCPU\Release\GCodePreviewControl.dll" "package\" 2>nul
+
         copy "Installer\RegisterPreviewHandler.reg" "package\"
         copy "Installer\Install.bat" "package\"
 
+        echo "=== Package folder contents ==="
+        dir package
 
     - name: Zip package
       run: powershell Compress-Archive -Path package\* -DestinationPath GCodePreviewHandler.zip -Force
@@ -47,9 +61,3 @@ jobs:
       with:
         name: GCodePreviewHandler
         path: GCodePreviewHandler.zip
-
-    - name: Upload to GitHub Release
-      uses: softprops/action-gh-release@v2
-      if: startsWith(github.ref, 'refs/tags/')
-      with:
-        files: GCodePreviewHandler.zip
