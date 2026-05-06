@@ -1,4 +1,4 @@
-name: Build and Package
+name: Build DLLs Only
 
 on:
   push:
@@ -16,48 +16,18 @@ jobs:
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v2
 
-    - name: Restore NuGet packages
+    - name: Restore NuGet
       run: nuget restore "src/GCodePreviewHandler.sln"
 
-    - name: Build solution (with error log)
+    - name: Build solution (log errors)
       run: msbuild "src/GCodePreviewHandler.sln" /p:Configuration=Release /fl /flp:logfile=msbuild.err;errorsonly
 
     - name: Show MSBuild errors
       run: |
-        echo "=== MSBuild Errors ==="
+        echo "=== MSBUILD ERRORS ==="
         if (Test-Path msbuild.err) { type msbuild.err } else { echo "No msbuild.err file found" }
 
-    - name: List build output
+    - name: Show ALL build output
       run: |
-        echo "=== Handler ==="
-        dir "src\GCodePreviewHandler" -Recurse
-        echo "=== Control ==="
-        dir "src\GCodePreviewControl" -Recurse
-
-    - name: Create packaging folder
-      run: |
-        mkdir package
-
-        REM Copy REAL DLLs from ANYCPU or x64 Release folders
-        copy "src\GCodePreviewHandler\bin\Release\GCodePreviewHandler.dll" "package\" 2>nul
-        copy "src\GCodePreviewHandler\bin\x64\Release\GCodePreviewHandler.dll" "package\" 2>nul
-        copy "src\GCodePreviewHandler\bin\AnyCPU\Release\GCodePreviewHandler.dll" "package\" 2>nul
-
-        copy "src\GCodePreviewControl\bin\Release\GCodePreviewControl.dll" "package\" 2>nul
-        copy "src\GCodePreviewControl\bin\x64\Release\GCodePreviewControl.dll" "package\" 2>nul
-        copy "src\GCodePreviewControl\bin\AnyCPU\Release\GCodePreviewControl.dll" "package\" 2>nul
-
-        copy "Installer\RegisterPreviewHandler.reg" "package\"
-        copy "Installer\Install.bat" "package\"
-
-        echo "=== Package folder contents ==="
-        dir package
-
-    - name: Zip package
-      run: powershell Compress-Archive -Path package\* -DestinationPath GCodePreviewHandler.zip -Force
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: GCodePreviewHandler
-        path: GCodePreviewHandler.zip
+        echo "=== FULL BIN OUTPUT ==="
+        dir "src" -Recurse | findstr /i ".dll"
