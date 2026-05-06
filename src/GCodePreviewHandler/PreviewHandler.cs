@@ -81,14 +81,31 @@ namespace GCodePreviewHandler
             }
         }
 
-        public void DoPreview()
-        {
-            if (!_isInitialized || string.IsNullOrEmpty(_filePath) || _viewer == null)
-                return;
+		public void DoPreview()
+		{
+			try
+			{
+				File.AppendAllText(@"C:\Temp\GCodePreview.log", $"DoPreview start: {_filePath}{Environment.NewLine}");
 
-            string text = File.ReadAllText(_filePath);
-            _viewer.LoadGCode(text);
-        }
+				if (!_isInitialized || string.IsNullOrEmpty(_filePath) || _viewer == null)
+				{
+					File.AppendAllText(@"C:\Temp\GCodePreview.log", "DoPreview: not initialized or no viewer" + Environment.NewLine);
+					return;
+				}
+
+				string text = File.ReadAllText(_filePath);
+				File.AppendAllText(@"C:\Temp\GCodePreview.log", $"DoPreview: read {text.Length} chars{Environment.NewLine}");
+
+				_viewer.LoadGCode(text);
+
+				File.AppendAllText(@"C:\Temp\GCodePreview.log", "DoPreview: LoadGCode completed" + Environment.NewLine);
+			}
+			catch (Exception ex)
+			{
+				File.AppendAllText(@"C:\Temp\GCodePreview.log", "DoPreview ERROR: " + ex + Environment.NewLine);
+			}
+		}
+
 
         public void Unload()
         {
