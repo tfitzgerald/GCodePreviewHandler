@@ -84,7 +84,6 @@
               Key=".nc\ShellEx
 
 \[PREVIEW_GUID]"
-              Name=""
               Type="string"
               Value="[HANDLER_CLSID]"
               KeyPath="yes" />
@@ -96,7 +95,6 @@
               Key=".gcode\ShellEx
 
 \[PREVIEW_GUID]"
-              Name=""
               Type="string"
               Value="[HANDLER_CLSID]"
               KeyPath="yes" />
