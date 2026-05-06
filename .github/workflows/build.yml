@@ -4,6 +4,11 @@ on:
   push:
     branches: [ main ]
   pull_request:
+  release:
+    types: [ published ]
+
+permissions:
+  contents: write   # required for softprops/action-gh-release to upload assets
 
 jobs:
   build:
@@ -21,10 +26,25 @@ jobs:
     - name: Build solution
       run: msbuild src/GCodePreviewHandler.sln /p:Configuration=Release
 
-    - name: Upload build artifacts
+    - name: Package ZIP
+      shell: pwsh
+      run: |
+        $staging = "staging/GCodePreviewHandler"
+        New-Item -ItemType Directory -Path $staging | Out-Null
+        Copy-Item src/GCodePreviewHandler/bin/Release/GCodePreviewHandler.dll  $staging/
+        Copy-Item src/GCodePreviewControl/bin/Release/GCodePreviewControl.dll  $staging/
+        Copy-Item Installer/install.ps1   $staging/
+        Copy-Item Installer/uninstall.ps1 $staging/
+        Compress-Archive -Path "$staging/*" -DestinationPath staging/GCodePreviewHandler.zip
+
+    - name: Upload build artifact
       uses: actions/upload-artifact@v4
       with:
-        name: gcode-preview-handler
-        path: |
-          src/GCodePreviewHandler/bin/Release/*.dll
-          src/GCodePreviewControl/bin/Release/*.dll
+        name: GCodePreviewHandler
+        path: staging/GCodePreviewHandler.zip
+
+    - name: Attach ZIP to GitHub Release
+      if: github.event_name == 'release'
+      uses: softprops/action-gh-release@v2
+      with:
+        files: staging/GCodePreviewHandler.zip
