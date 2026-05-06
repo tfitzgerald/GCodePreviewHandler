@@ -1,13 +1,10 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
 using System.Windows.Forms;
-using GCodePreviewControl;
 
 namespace GCodePreviewHandler
 {
-    // CLSID for the preview handler (keep this stable)
     [ComVisible(true)]
     [Guid("D0A1F2C1-ABCD-4F00-9A11-1234567890AB")]
     [ClassInterface(ClassInterfaceType.None)]
@@ -17,20 +14,19 @@ namespace GCodePreviewHandler
         IOleWindow
     {
         private IntPtr _parentHwnd = IntPtr.Zero;
-        private Rectangle _bounds;
-        private bool _isInitialized;
+        private RECT _rect;
         private string? _filePath;
+        private bool _initialized;
 
         private Form? _hostForm;
-        private ElementHost? _elementHost;
-        private GCodePreviewControl.GCodePreviewControl? _viewer;
+        private TextBox? _textBox;
 
         #region IInitializeWithFile
 
         public void Initialize(string pszFilePath, STGM grfMode)
         {
             _filePath = pszFilePath;
-            _isInitialized = true;
+            _initialized = true;
         }
 
         #endregion
@@ -40,7 +36,7 @@ namespace GCodePreviewHandler
         public void SetWindow(IntPtr hwnd, ref RECT rect)
         {
             _parentHwnd = hwnd;
-            _bounds = new Rectangle(rect.Left, rect.Top, rect.Right - rect.Left, rect.Bottom - rect.Top);
+            _rect = rect;
 
             if (_hostForm == null)
             {
@@ -51,71 +47,69 @@ namespace GCodePreviewHandler
                     ShowInTaskbar = false
                 };
 
-                _elementHost = new ElementHost
+                _textBox = new TextBox
                 {
-                    Dock = DockStyle.Fill
+                    Multiline = true,
+                    ReadOnly = true,
+                    ScrollBars = ScrollBars.Both,
+                    Dock = DockStyle.Fill,
+                    WordWrap = false
                 };
 
-                _viewer = new GCodePreviewControl.GCodePreviewControl();
-                _elementHost.Child = _viewer;
-
-                _hostForm.Controls.Add(_elementHost);
+                _hostForm.Controls.Add(_textBox);
                 _hostForm.CreateControl();
 
                 NativeMethods.SetParent(_hostForm.Handle, _parentHwnd);
-                _hostForm.Bounds = _bounds;
+                UpdateBounds();
                 _hostForm.Show();
             }
             else
             {
-                _hostForm.Bounds = _bounds;
+                UpdateBounds();
             }
         }
 
         public void SetRect(ref RECT rect)
         {
-            _bounds = new Rectangle(rect.Left, rect.Top, rect.Right - rect.Left, rect.Bottom - rect.Top);
-            if (_hostForm != null)
+            _rect = rect;
+            UpdateBounds();
+        }
+
+        private void UpdateBounds()
+        {
+            if (_hostForm == null)
+                return;
+
+            int width = _rect.Right - _rect.Left;
+            int height = _rect.Bottom - _rect.Top;
+
+            _hostForm.Bounds = new System.Drawing.Rectangle(
+                _rect.Left,
+                _rect.Top,
+                width,
+                height);
+        }
+
+        public void DoPreview()
+        {
+            if (!_initialized || string.IsNullOrEmpty(_filePath) || _textBox == null)
+                return;
+
+            try
             {
-                _hostForm.Bounds = _bounds;
+                string text = File.ReadAllText(_filePath);
+                _textBox.Text = text;
+            }
+            catch (Exception ex)
+            {
+                _textBox.Text = "Error loading file:\r\n" + ex;
             }
         }
 
-		public void DoPreview()
-		{
-			try
-			{
-				File.AppendAllText(@"C:\Temp\GCodePreview.log", $"DoPreview start: {_filePath}{Environment.NewLine}");
-
-				if (!_isInitialized || string.IsNullOrEmpty(_filePath) || _viewer == null)
-				{
-					File.AppendAllText(@"C:\Temp\GCodePreview.log", "DoPreview: not initialized or no viewer" + Environment.NewLine);
-					return;
-				}
-
-				string text = File.ReadAllText(_filePath);
-				File.AppendAllText(@"C:\Temp\GCodePreview.log", $"DoPreview: read {text.Length} chars{Environment.NewLine}");
-
-				_viewer.LoadGCode(text);
-
-				File.AppendAllText(@"C:\Temp\GCodePreview.log", "DoPreview: LoadGCode completed" + Environment.NewLine);
-			}
-			catch (Exception ex)
-			{
-				File.AppendAllText(@"C:\Temp\GCodePreview.log", "DoPreview ERROR: " + ex + Environment.NewLine);
-			}
-		}
-
-
         public void Unload()
         {
-            _viewer = null;
-
-            if (_elementHost != null)
-            {
-                _elementHost.Dispose();
-                _elementHost = null;
-            }
+            _filePath = null;
+            _initialized = false;
 
             if (_hostForm != null)
             {
@@ -124,9 +118,8 @@ namespace GCodePreviewHandler
                 _hostForm = null;
             }
 
+            _textBox = null;
             _parentHwnd = IntPtr.Zero;
-            _isInitialized = false;
-            _filePath = null;
         }
 
         public void SetFocus()
@@ -141,7 +134,7 @@ namespace GCodePreviewHandler
 
         public uint TranslateAccelerator(ref MSG pmsg)
         {
-            return 0; // no keyboard handling
+            return 0;
         }
 
         #endregion
@@ -155,7 +148,6 @@ namespace GCodePreviewHandler
 
         public void ContextSensitiveHelp(bool fEnterMode)
         {
-            // not used
         }
 
         #endregion
@@ -228,9 +220,6 @@ namespace GCodePreviewHandler
         [DllImport("user32.dll", SetLastError = true)]
         public static extern IntPtr SetParent(IntPtr hWndChild, IntPtr hWndNewParent);
     }
-
-    // WinForms/WPF bridge
-    public class ElementHost : System.Windows.Forms.Integration.ElementHost { }
 
     #endregion
 }
