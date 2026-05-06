@@ -12,10 +12,8 @@
     <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" Platform="x64" />
     <MediaTemplate />
     <MajorUpgrade DowngradeErrorMessage="A newer version is already installed." />
-
-    <Property Id="PREVIEW_GUID" Value="{8895b1c6-b41f-4c1c-a562-0d564250836f}" />
-    <Property Id="HANDLER_CLSID" Value="{A1C3F4D2-9B8E-4F1E-8C3C-2A1F0B9D1234}" />
-
+ 
+ 
     <!--
       Register/unregister the COM servers so Windows Explorer can load the
       shell extension. regsvr32 writes the CLSID keys that tell COM where
@@ -78,27 +76,24 @@
             The original had a fake <Directory Id="HKCR"> wrapper which is
             invalid WiX and also had an unclosed tag for .gcode — both fixed.
           -->
-          <Component Id="cmpNcPreviewReg" Guid="B1B2B3B4-B5B6-4B7B-8B9B-0B1B2B3B4B5B">
-            <RegistryValue
-              Root="HKCR"
-              Key=".nc\ShellEx
-
-\[PREVIEW_GUID]"
-              Type="string"
-              Value="[HANDLER_CLSID]"
-              KeyPath="yes" />
-          </Component>
+		  <Component Id="cmpNcPreviewReg" Guid="B1B2B3B4-B5B6-4B7B-8B9B-0B1B2B3B4B5B">
+			  <RegistryValue
+				Root="HKCR"
+				Key=".nc\ShellEx\{8895b1c6-b41f-4c1c-a562-0d564250836f}"
+				Type="string"
+				Value="{A1C3F4D2-9B8E-4F1E-8C3C-2A1F0B9D1234}"
+				KeyPath="yes" />
+		  </Component>
 
           <Component Id="cmpGcodePreviewReg" Guid="A1A2A3A4-A5A6-4A7A-8A9A-0A1A2A3A4A5A">
-            <RegistryValue
-              Root="HKCR"
-              Key=".gcode\ShellEx
+			  <RegistryValue
+				Root="HKCR"
+				Key=".gcode\ShellEx\{8895b1c6-b41f-4c1c-a562-0d564250836f}"
+				Type="string"
+				Value="{A1C3F4D2-9B8E-4F1E-8C3C-2A1F0B9D1234}"
+				KeyPath="yes" />
+		  </Component>
 
-\[PREVIEW_GUID]"
-              Type="string"
-              Value="[HANDLER_CLSID]"
-              KeyPath="yes" />
-          </Component>
 
         </Directory>
       </Directory>
