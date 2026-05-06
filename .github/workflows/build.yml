@@ -1,0 +1,49 @@
+name: Build and Package
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Restore NuGet
+      run: nuget restore "GCodePreviewHandler.sln"
+
+    - name: Build solution
+      run: msbuild "GCodePreviewHandler.sln" /p:Configuration=Release
+
+    - name: Show build output
+      run: |
+        echo "=== Control DLLs ==="
+        dir "src\GCodePreviewControl\bin\Release"
+        echo "=== Handler DLLs ==="
+        dir "src\GCodePreviewHandler\bin\Release"
+
+    - name: Create package folder
+      run: |
+        mkdir package
+        copy "src\GCodePreviewHandler\bin\Release\GCodePreviewHandler.dll" package\
+        copy "src\GCodePreviewControl\bin\Release\GCodePreviewControl.dll" package\
+        copy "Installer\Install.bat" package\
+        copy "Installer\RegisterPreviewHandler.reg" package\
+        echo "=== Package Contents ==="
+        dir package
+
+    - name: Zip package
+      run: powershell Compress-Archive -Path package\* -DestinationPath GCodePreviewHandler.zip -Force
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: GCodePreviewHandler
+        path: GCodePreviewHandler.zip
