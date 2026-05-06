@@ -21,29 +21,30 @@
       wire the .nc/.gcode associations to those CLSIDs.
     -->
     <CustomAction Id="RegisterHandlerDll"
-                  Directory="INSTALLDIR"
-                  ExeCommand="[SystemFolder]regsvr32.exe /s &quot;[INSTALLDIR]GCodePreviewHandler.dll&quot;"
-                  Execute="deferred"
-                  Return="check"
-                  Impersonate="no" />
-    <CustomAction Id="RegisterControlDll"
-                  Directory="INSTALLDIR"
-                  ExeCommand="[SystemFolder]regsvr32.exe /s &quot;[INSTALLDIR]GCodePreviewControl.dll&quot;"
-                  Execute="deferred"
-                  Return="check"
-                  Impersonate="no" />
-    <CustomAction Id="UnregisterHandlerDll"
-                  Directory="INSTALLDIR"
-                  ExeCommand="[SystemFolder]regsvr32.exe /s /u &quot;[INSTALLDIR]GCodePreviewHandler.dll&quot;"
-                  Execute="deferred"
-                  Return="ignore"
-                  Impersonate="no" />
-    <CustomAction Id="UnregisterControlDll"
-                  Directory="INSTALLDIR"
-                  ExeCommand="[SystemFolder]regsvr32.exe /s /u &quot;[INSTALLDIR]GCodePreviewControl.dll&quot;"
-                  Execute="deferred"
-                  Return="ignore"
-                  Impersonate="no" />
+              Directory="INSTALLDIR"
+              ExeCommand="[WindowsFolder]Microsoft.NET\Framework64\v4.0.30319\RegAsm.exe /codebase &quot;[INSTALLDIR]GCodePreviewHandler.dll&quot;"
+              Execute="deferred"
+              Return="check"
+              Impersonate="no" />
+	<CustomAction Id="RegisterControlDll"
+              Directory="INSTALLDIR"
+              ExeCommand="[WindowsFolder]Microsoft.NET\Framework64\v4.0.30319\RegAsm.exe /codebase &quot;[INSTALLDIR]GCodePreviewControl.dll&quot;"
+              Execute="deferred"
+              Return="check"
+              Impersonate="no" />
+	<CustomAction Id="UnregisterHandlerDll"
+              Directory="INSTALLDIR"
+              ExeCommand="[WindowsFolder]Microsoft.NET\Framework64\v4.0.30319\RegAsm.exe /unregister &quot;[INSTALLDIR]GCodePreviewHandler.dll&quot;"
+              Execute="deferred"
+              Return="ignore"
+              Impersonate="no" />
+	<CustomAction Id="UnregisterControlDll"
+              Directory="INSTALLDIR"
+              ExeCommand="[WindowsFolder]Microsoft.NET\Framework64\v4.0.30319\RegAsm.exe /unregister &quot;[INSTALLDIR]GCodePreviewControl.dll&quot;"
+              Execute="deferred"
+              Return="ignore"
+              Impersonate="no" />
+
 
     <InstallExecuteSequence>
       <!-- Unregister before files are removed (uninstall or upgrade) -->
