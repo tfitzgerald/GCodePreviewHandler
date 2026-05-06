@@ -27,14 +27,17 @@ jobs:
       run: msbuild src/GCodePreviewHandler.sln /p:Configuration=Release
 
     - name: Install WiX Toolset 3
-      run: choco install wixtoolset --version 3.14.1 -y --no-progress
+      run: choco install wixtoolset -y --no-progress
 
     - name: Build MSI installer
       shell: pwsh
       run: |
         $handlerBin = "${{ github.workspace }}\src\GCodePreviewHandler\bin\Release"
         $controlBin = "${{ github.workspace }}\src\GCodePreviewControl\bin\Release"
-        $wixToolPath = "C:\Program Files (x86)\WiX Toolset v3.14\bin"
+        $wixToolPath = (Get-Item "C:\Program Files (x86)\WiX Toolset v3*\bin" |
+                        Sort-Object Name -Descending |
+                        Select-Object -First 1).FullName
+        Write-Host "WiX bin path: $wixToolPath"
         msbuild Installer/Wix/GCodePreviewHandler.wixproj `
           /p:Configuration=Release `
           /p:WixToolPath="$wixToolPath" `
