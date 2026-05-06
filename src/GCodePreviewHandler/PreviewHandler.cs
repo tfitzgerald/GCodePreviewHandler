@@ -8,6 +8,18 @@ namespace GCodePreviewHandler
     [ComVisible(true)]
     [Guid("D0A1F2C1-ABCD-4F00-9A11-1234567890AB")]
     [ClassInterface(ClassInterfaceType.None)]
+	
+	public PreviewHandler()
+	{
+		try
+		{
+			File.AppendAllText(@"C:\Temp\GCodePreview.log",
+				"CONSTRUCTOR CALLED " + DateTime.Now + Environment.NewLine);
+		}
+		catch { }
+	}
+
+	
     public class PreviewHandler :
         IPreviewHandler,
         IInitializeWithFile,
