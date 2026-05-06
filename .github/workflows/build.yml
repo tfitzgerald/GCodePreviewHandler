@@ -26,6 +26,24 @@ jobs:
     - name: Build solution
       run: msbuild src/GCodePreviewHandler.sln /p:Configuration=Release
 
+    # ── WiX MSI ──────────────────────────────────────────────────────────────
+    # WiX 3 is pre-installed on windows-latest. The WIX environment variable
+    # points to the install root (e.g. C:\Program Files (x86)\WiX Toolset v3.14\).
+    # We pass WixToolPath so the .wixproj Import resolves, and DefineConstants
+    # so $(var.HandlerBin) and $(var.ControlBin) in Product.wxs resolve to the
+    # correct Release output folders without hard-coding paths into the .wxs.
+    - name: Build MSI installer
+      shell: pwsh
+      run: |
+        $handlerBin = "${{ github.workspace }}\src\GCodePreviewHandler\bin\Release"
+        $controlBin = "${{ github.workspace }}\src\GCodePreviewControl\bin\Release"
+        $wixToolPath = "$env:WIX\bin\"
+        msbuild Installer/Wix/GCodePreviewHandler.wixproj `
+          /p:Configuration=Release `
+          /p:WixToolPath="$wixToolPath" `
+          /p:DefineConstants="HandlerBin=$handlerBin;ControlBin=$controlBin"
+
+    # ── ZIP package ──────────────────────────────────────────────────────────
     - name: Package ZIP
       shell: pwsh
       run: |
@@ -37,14 +55,30 @@ jobs:
         Copy-Item Installer/uninstall.ps1 $staging/
         Compress-Archive -Path "$staging/*" -DestinationPath staging/GCodePreviewHandler.zip
 
-    - name: Upload build artifact
+    # Copy MSI next to the ZIP so both live in the same staging folder
+    - name: Stage MSI
+      shell: pwsh
+      run: |
+        Copy-Item Installer/Wix/bin/Release/GCodePreviewHandler.msi staging/
+
+    # ── CI artifacts (available on every run, not just releases) ─────────────
+    - name: Upload ZIP artifact
       uses: actions/upload-artifact@v4
       with:
-        name: GCodePreviewHandler
+        name: GCodePreviewHandler-zip
         path: staging/GCodePreviewHandler.zip
 
-    - name: Attach ZIP to GitHub Release
+    - name: Upload MSI artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: GCodePreviewHandler-msi
+        path: staging/GCodePreviewHandler.msi
+
+    # ── Release attachments (only when a GitHub Release is published) ─────────
+    - name: Attach ZIP and MSI to GitHub Release
       if: github.event_name == 'release'
       uses: softprops/action-gh-release@v2
       with:
-        files: staging/GCodePreviewHandler.zip
+        files: |
+          staging/GCodePreviewHandler.zip
+          staging/GCodePreviewHandler.msi
