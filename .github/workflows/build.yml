@@ -25,9 +25,9 @@ jobs:
     - name: List build output
       run: |
         echo "=== GCodePreviewHandler output ==="
-        dir /s src\GCodePreviewHandler\bin
+        dir "src/GCodePreviewHandler/bin" -Recurse
         echo "=== GCodePreviewControl output ==="
-        dir /s src\GCodePreviewControl\bin
+        dir "src/GCodePreviewControl/bin" -Recurse
       
 
     - name: Create packaging folder
