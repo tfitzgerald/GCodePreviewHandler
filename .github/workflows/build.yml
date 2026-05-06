@@ -20,3 +20,11 @@ jobs:
 
     - name: Build solution
       run: msbuild src/GCodePreviewHandler.sln /p:Configuration=Release
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: gcode-preview-handler
+        path: |
+          src/GCodePreviewHandler/bin/Release/*.dll
+          src/GCodePreviewControl/bin/Release/*.dll
