@@ -1,3 +1,6 @@
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
 using HelixToolkit.Wpf.SharpDX;
 using HelixToolkit.SharpDX.Core;
@@ -14,43 +17,71 @@ namespace GCodePreviewControl
 
         public void LoadGCode(string text)
         {
-            var builder = new LineBuilder();
+            // Parse on a background thread so the UI stays responsive
+            LoadingText.Visibility = Visibility.Visible;
+            StatusText.Text = string.Empty;
+            Viewport.Items.Clear();
 
-            float x = 0, y = 0, z = 0;
+            Task.Run(() => GCodeParser.Parse(text))
+                .ContinueWith(t => RenderMoves(t.Result),
+                              System.Threading.Tasks.TaskScheduler.FromCurrentSynchronizationContext());
+        }
 
-            foreach (var raw in text.Split('\n'))
+        private void RenderMoves(System.Collections.Generic.List<GCodeMove> moves)
+        {
+            LoadingText.Visibility = Visibility.Collapsed;
+
+            if (moves.Count == 0)
             {
-                var line = raw.Trim();
-                if (!line.StartsWith("G1"))
-                    continue;
-
-                float nx = x, ny = y, nz = z;
-
-                foreach (var part in line.Split(' '))
-                {
-                    if (part.StartsWith("X") && float.TryParse(part.Substring(1), out float vx)) nx = vx;
-                    if (part.StartsWith("Y") && float.TryParse(part.Substring(1), out float vy)) ny = vy;
-                    if (part.StartsWith("Z") && float.TryParse(part.Substring(1), out float vz)) nz = vz;
-                }
-
-                builder.AddLine(new Vector3(x, y, z), new Vector3(nx, ny, nz));
-
-                x = nx; y = ny; z = nz;
+                StatusText.Text = "No toolpath moves found.";
+                return;
             }
 
-            var geometry = builder.ToLineGeometry3D();
+            // --- Build separate line sets for rapids and cuts ---
+            var rapidBuilder = new LineBuilder();
+            var cutBuilder   = new LineBuilder();
 
-            var model = new LineGeometryModel3D
+            foreach (var m in moves)
             {
-                Geometry = geometry,
-                Color = new Color4(0f, 0f, 1f, 1f),
-                Thickness = 2.0f
-            };
+                if (m.Type == MoveType.Rapid)
+                    rapidBuilder.AddLine(m.From, m.To);
+                else
+                    cutBuilder.AddLine(m.From, m.To);
+            }
 
             Viewport.Items.Clear();
-            Viewport.Items.Add(model);
 
-            Viewport.ZoomExtents();
+            // Cuts — bright blue
+            var cutGeo = cutBuilder.ToLineGeometry3D();
+            if (cutGeo?.Positions?.Count > 0)
+            {
+                Viewport.Items.Add(new LineGeometryModel3D
+                {
+                    Geometry  = cutGeo,
+                    Color     = new Color4(0.20f, 0.65f, 1.00f, 1.0f),
+                    Thickness = 1.5f
+                });
+            }
+
+            // Rapids — dim grey, thinner
+            var rapidGeo = rapidBuilder.ToLineGeometry3D();
+            if (rapidGeo?.Positions?.Count > 0)
+            {
+                Viewport.Items.Add(new LineGeometryModel3D
+                {
+                    Geometry  = rapidGeo,
+                    Color     = new Color4(0.45f, 0.45f, 0.45f, 0.6f),
+                    Thickness = 0.8f
+                });
+            }
+
+            Viewport.ZoomExtents(animationTime: 0);
+
+            int cuts   = moves.Count(m => m.Type == MoveType.Cut);
+            int rapids = moves.Count(m => m.Type == MoveType.Rapid);
+            StatusText.Text =
+                $"{moves.Count:N0} moves  ·  {cuts:N0} cuts (blue)  ·  {rapids:N0} rapids (grey)" +
+                "    |  Drag to orbit  ·  Scroll to zoom  ·  Right-drag to pan";
         }
     }
 }

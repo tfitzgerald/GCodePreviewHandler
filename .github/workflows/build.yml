@@ -57,6 +57,7 @@ jobs:
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 
+
     - name: Package ZIP
       shell: pwsh
       run: |
@@ -67,7 +68,7 @@ jobs:
         Copy-Item Installer/install.ps1   $staging/
         Copy-Item Installer/uninstall.ps1 $staging/
         Compress-Archive -Path "$staging/*" -DestinationPath staging/GCodePreviewHandler.zip
-
+ 
     - name: Upload ZIP artifact
       uses: actions/upload-artifact@v4
       with:
