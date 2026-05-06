@@ -15,19 +15,12 @@ jobs:
 
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v2
-      
-    - name: Show MSBuild errors
-        run: |
-        echo "=== MSBuild Errors ==="
-        type msbuild.err || echo "No msbuild.err file found"
-  
 
     - name: Restore NuGet packages
       run: nuget restore src/GCodePreviewHandler.sln
 
     - name: Build solution
-        run: msbuild src/GCodePreviewHandler.sln /p:Configuration=Release /fl /flp:logfile=msbuild.err;errorsonly
-
+      run: msbuild src/GCodePreviewHandler.sln /p:Configuration=Release
       
     - name: List build output
       run: |
