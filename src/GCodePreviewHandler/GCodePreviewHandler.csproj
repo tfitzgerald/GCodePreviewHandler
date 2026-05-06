@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <AssemblyName>GCodePreviewHandler</AssemblyName>
+    <RootNamespace>GCodePreviewHandler</RootNamespace>
+    <RegisterForComInterop>true</RegisterForComInterop>
+    <OutputType>Library</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GCodePreviewControl\GCodePreviewControl.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="**\*.cs" />
+  </ItemGroup>
+</Project>

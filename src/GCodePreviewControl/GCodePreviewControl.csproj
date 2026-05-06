@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>GCodePreviewControl</AssemblyName>
+    <RootNamespace>GCodePreviewControl</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="HelixToolkit.Wpf" Version="2.27.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="**\*.cs" />
+    <Page Include="**\*.xaml" />
+  </ItemGroup>
+</Project>
