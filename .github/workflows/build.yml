@@ -68,10 +68,6 @@ jobs:
         Copy-Item Installer/uninstall.ps1 $staging/
         Compress-Archive -Path "$staging/*" -DestinationPath staging/GCodePreviewHandler.zip
 
-    - name: Stage MSI
-      shell: pwsh
-      run: Copy-Item Installer/Wix/bin/Release/GCodePreviewHandler.msi staging/
-
     - name: Upload ZIP artifact
       uses: actions/upload-artifact@v4
       with:
