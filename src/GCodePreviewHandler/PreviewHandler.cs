@@ -13,15 +13,13 @@ namespace GCodePreviewHandler
         IInitializeWithFile,
         IOleWindow
     {
-        private IntPtr _parentHwnd = IntPtr.Zero;
+        private IntPtr _parentHwnd;
         private RECT _rect;
         private string? _filePath;
         private bool _initialized;
 
-        private Form? _hostForm;
+        private UserControl? _control;
         private TextBox? _textBox;
-
-        #region IInitializeWithFile
 
         public void Initialize(string pszFilePath, STGM grfMode)
         {
@@ -29,22 +27,16 @@ namespace GCodePreviewHandler
             _initialized = true;
         }
 
-        #endregion
-
-        #region IPreviewHandler
-
         public void SetWindow(IntPtr hwnd, ref RECT rect)
         {
             _parentHwnd = hwnd;
             _rect = rect;
 
-            if (_hostForm == null)
+            if (_control == null)
             {
-                _hostForm = new Form
+                _control = new UserControl
                 {
-                    FormBorderStyle = FormBorderStyle.None,
-                    TopLevel = false,
-                    ShowInTaskbar = false
+                    BorderStyle = BorderStyle.None
                 };
 
                 _textBox = new TextBox
@@ -56,12 +48,10 @@ namespace GCodePreviewHandler
                     WordWrap = false
                 };
 
-                _hostForm.Controls.Add(_textBox);
-                _hostForm.CreateControl();
+                _control.Controls.Add(_textBox);
 
-                NativeMethods.SetParent(_hostForm.Handle, _parentHwnd);
+                NativeMethods.SetParent(_control.Handle, _parentHwnd);
                 UpdateBounds();
-                _hostForm.Show();
             }
             else
             {
@@ -77,13 +67,13 @@ namespace GCodePreviewHandler
 
         private void UpdateBounds()
         {
-            if (_hostForm == null)
+            if (_control == null)
                 return;
 
             int width = _rect.Right - _rect.Left;
             int height = _rect.Bottom - _rect.Top;
 
-            _hostForm.Bounds = new System.Drawing.Rectangle(
+            _control.Bounds = new System.Drawing.Rectangle(
                 _rect.Left,
                 _rect.Top,
                 width,
@@ -111,25 +101,23 @@ namespace GCodePreviewHandler
             _filePath = null;
             _initialized = false;
 
-            if (_hostForm != null)
+            if (_control != null)
             {
-                _hostForm.Close();
-                _hostForm.Dispose();
-                _hostForm = null;
+                _control.Dispose();
+                _control = null;
             }
 
             _textBox = null;
-            _parentHwnd = IntPtr.Zero;
         }
 
         public void SetFocus()
         {
-            _hostForm?.Focus();
+            _control?.Focus();
         }
 
         public void QueryFocus(out IntPtr phwnd)
         {
-            phwnd = _hostForm?.Handle ?? IntPtr.Zero;
+            phwnd = _control?.Handle ?? IntPtr.Zero;
         }
 
         public uint TranslateAccelerator(ref MSG pmsg)
@@ -137,20 +125,14 @@ namespace GCodePreviewHandler
             return 0;
         }
 
-        #endregion
-
-        #region IOleWindow
-
         public void GetWindow(out IntPtr phwnd)
         {
-            phwnd = _hostForm?.Handle ?? IntPtr.Zero;
+            phwnd = _control?.Handle ?? IntPtr.Zero;
         }
 
         public void ContextSensitiveHelp(bool fEnterMode)
         {
         }
-
-        #endregion
     }
 
     #region Interop
