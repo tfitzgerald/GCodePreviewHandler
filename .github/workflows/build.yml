@@ -1,90 +1,46 @@
-name: Build Preview Handler
+name: Build and Package
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-  release:
-    types: [ published ]
-
-permissions:
-  contents: write
+    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout
+      uses: actions/checkout@v4
 
     - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v1.3.1
+      uses: microsoft/setup-msbuild@v2
 
     - name: Restore NuGet packages
-      run: msbuild src/GCodePreviewHandler.sln /t:Restore /p:Configuration=Release
+      run: nuget restore src/GCodePreviewHandler.sln
 
     - name: Build solution
       run: msbuild src/GCodePreviewHandler.sln /p:Configuration=Release
 
-    - name: Install WiX Toolset 3
-      run: choco install wixtoolset -y --force --no-progress
-
-    - name: Build MSI installer
-      shell: pwsh
+    - name: Create packaging folder
       run: |
-        $wixBin = (Get-Item "C:\Program Files (x86)\WiX Toolset v3*\bin" |
-                   Sort-Object Name -Descending |
-                   Select-Object -First 1).FullName
-        Write-Host "WiX bin: $wixBin"
-        Get-ChildItem $wixBin -Filter "*.exe" | Select-Object -ExpandProperty Name
+        mkdir package
+        copy src\GCodePreviewHandler\bin\Release\GCodePreviewHandler.dll package\
+        copy src\GCodePreviewControl\bin\Release\GCodePreviewControl.dll package\
+        copy Installer\RegisterPreviewHandler.reg package\
+        copy Installer\Install.bat package\
 
-        $handlerBin = "${{ github.workspace }}\src\GCodePreviewHandler\bin\Release"
-        $controlBin = "${{ github.workspace }}\src\GCodePreviewControl\bin\Release"
+    - name: Zip package
+      run: powershell Compress-Archive -Path package\* -DestinationPath GCodePreviewHandler.zip -Force
 
-        # Compile .wxs -> .wixobj
-        & "$wixBin\candle.exe" -arch x64 `
-            -dHandlerBin="$handlerBin" `
-            -dControlBin="$controlBin" `
-            Installer/Wix/Product.wxs `
-            -out Installer/Wix/Product.wixobj
-        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-        # Link .wixobj -> .msi
-        New-Item -ItemType Directory -Path staging -Force | Out-Null
-        & "$wixBin\light.exe" `
-            Installer/Wix/Product.wixobj `
-            -out staging/GCodePreviewHandler.msi
-        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-
-
-    - name: Package ZIP
-      shell: pwsh
-      run: |
-        $staging = "staging/GCodePreviewHandler"
-        New-Item -ItemType Directory -Path $staging | Out-Null
-        Copy-Item src/GCodePreviewHandler/bin/Release/GCodePreviewHandler.dll  $staging/
-        Copy-Item src/GCodePreviewControl/bin/Release/GCodePreviewControl.dll  $staging/
-        Copy-Item Installer/install.ps1   $staging/
-        Copy-Item Installer/uninstall.ps1 $staging/
-        Compress-Archive -Path "$staging/*" -DestinationPath staging/GCodePreviewHandler.zip
- 
-    - name: Upload ZIP artifact
+    - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: GCodePreviewHandler-zip
-        path: staging/GCodePreviewHandler.zip
+        name: GCodePreviewHandler
+        path: GCodePreviewHandler.zip
 
-    - name: Upload MSI artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: GCodePreviewHandler-msi
-        path: staging/GCodePreviewHandler.msi
-
-    - name: Attach ZIP and MSI to GitHub Release
-      if: github.event_name == 'release'
+    - name: Upload to GitHub Release
       uses: softprops/action-gh-release@v2
+      if: startsWith(github.ref, 'refs/tags/')
       with:
-        files: |
-          staging/GCodePreviewHandler.zip
-          staging/GCodePreviewHandler.msi
+        files: GCodePreviewHandler.zip

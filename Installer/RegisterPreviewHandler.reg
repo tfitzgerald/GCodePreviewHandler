@@ -1,0 +1,33 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\CLSID\{D0A1F2C1-ABCD-4F00-9A11-1234567890AB}]
+@="GCode Preview Handler"
+
+[HKEY_CLASSES_ROOT\CLSID\{D0A1F2C1-ABCD-4F00-9A11-1234567890AB}\InprocServer32]
+@="mscoree.dll"
+"ThreadingModel"="Both"
+"Class"="GCodePreviewHandler.PreviewHandler"
+"Assembly"="GCodePreviewHandler"
+"RuntimeVersion"="v4.0.30319"
+"CodeBase"="file:///C:/Program Files/GCodePreviewHandler/GCodePreviewHandler.dll"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\PreviewHandlers]
+"{D0A1F2C1-ABCD-4F00-9A11-1234567890AB}"="GCode Preview Handler"
+
+[HKEY_CLASSES_ROOT\.gcode]
+@="GCodeFile"
+
+[HKEY_CLASSES_ROOT\.nc]
+@="GCodeFile"
+
+[HKEY_CLASSES_ROOT\.tap]
+@="GCodeFile"
+
+[HKEY_CLASSES_ROOT\.bgcode]
+@="GCodeFile"
+
+[HKEY_CLASSES_ROOT\GCodeFile]
+@="GCode CNC File"
+
+[HKEY_CLASSES_ROOT\GCodeFile\shellex\{8895b1c6-b41f-4c1c-a562-0d564250836f}]
+@="{D0A1F2C1-ABCD-4F00-9A11-1234567890AB}"
